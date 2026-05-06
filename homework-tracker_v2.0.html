@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="作業記錄">
+<title>作業影片記錄</title>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e8e5df;
+    --border-dark: #d0ccc3;
+    --text: #1a1916;
+    --text-muted: #7a7670;
+    --text-hint: #b0aca5;
+    --accent: #2c5f8a;
+    --accent-bg: #eaf1f8;
+    --accent-light: #d0e4f3;
+    --success: #2d6a4f;
+    --success-bg: #eaf4ee;
+    --warning: #7a4f1a;
+    --warning-bg: #fdf3e3;
+    --danger: #8a2c2c;
+    --danger-bg: #faeaea;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Helvetica Neue', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* 頂部導覽 */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .back-btn {
+    font-size: 15px; color: var(--accent); background: none;
+    border: none; cursor: pointer; padding: 4px 0; display: flex; align-items: center; gap: 4px;
+  }
+  .topbar-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .topbar-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  /* Tab 列 */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 0; font-size: 14px; font-weight: 500;
+    border: none; background: none; cursor: pointer; color: var(--text-muted);
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* 主要內容區 */
+  .content { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+  /* 卡片 */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card:active { transform: scale(0.99); }
+
+  /* 作業卡片 */
+  .hw-card { cursor: pointer; transition: transform 0.15s; }
+  .hw-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .hw-name { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
+  .hw-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-left: 8px;
+  }
+  .badge-progress { background: var(--accent-bg); color: var(--accent); }
+  .badge-waiting { background: var(--warning-bg); color: var(--warning); }
+  .badge-done { background: var(--success-bg); color: var(--success); }
+
+  .hw-status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .hw-status-text { font-size: 12px; color: var(--text-muted); }
+
+  .feedback-preview {
+    background: var(--accent-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .feedback-preview-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+
+  /* 按鈕 */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 18px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border-dark); background: var(--surface);
+    color: var(--text); transition: all 0.15s; gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-success { background: var(--success); color: white; border-color: var(--success); }
+  .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-full { width: 100%; }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  /* 表單 */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 5px; display: block; font-weight: 500; }
+  .form-input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border-dark);
+    border-radius: var(--radius-sm); font-size: 15px; background: var(--surface);
+    color: var(--text); outline: none; transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text-hint); }
+  textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* 頁面顯示控制 */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* 文字預覽框 */
+  .text-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 14px;
+    line-height: 1.9;
+    white-space: pre-wrap;
+    color: var(--text);
+    margin-bottom: 10px;
+    font-family: inherit;
+  }
+
+  /* 通過畫面 */
+  .pass-screen {
+    text-align: center;
+    padding: 48px 20px 24px;
+  }
+  .pass-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .pass-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: var(--success); }
+  .pass-sub { font-size: 14px; color: var(--text-muted); }
+
+  /* 歷史記錄 */
+  .history-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-date { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .history-content { font-size: 13px; line-height: 1.7; }
+  .history-teacher {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: var(--warning-bg);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--warning);
+  }
+  .history-teacher-label { font-size: 11px; opacity: 0.7; }
+
+  /* 空狀態 */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 15px; margin-bottom: 6px; }
+  .empty-state-sub { font-size: 13px; color: var(--text-hint); }
+
+  /* 設定頁 */
+  .setting-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 15px; }
+  .setting-value { font-size: 14px; color: var(--text-muted); }
+
+  /* 通知提示 */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #1a1916; color: white; padding: 10px 20px;
+    border-radius: 20px; font-size: 14px; z-index: 999;
+    transition: transform 0.3s ease; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .section-title {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin: 20px 0 10px; padding: 0 2px;
+  }
+
+  .done-card { opacity: 0.55; }
+  .done-card .hw-name { text-decoration: line-through; text-decoration-color: var(--text-hint); }
+
+  /* FAB 新增按鈕 */
+  .fab {
+    position: fixed; bottom: 24px; right: 20px;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--accent); color: white;
+    border: none; font-size: 26px; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(44,95,138,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50; transition: transform 0.15s;
+  }
+  .fab:active { transform: scale(0.93); }
+
+  .chip {
+    display: inline-block; font-size: 12px; padding: 3px 9px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; color: var(--text-muted); margin-right: 4px; margin-bottom: 4px;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* 複製按鈕成功狀態 */
+  .btn-copied { background: var(--success-bg) !important; color: var(--success) !important; border-color: var(--success) !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 畫面 1：作業列表 ===== -->
+<div id="screen-list" class="screen active">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">作業記錄</div>
+      <div class="topbar-sub" id="student-name-display">513 張立築</div>
+    </div>
+    <button class="btn btn-sm" onclick="showScreen('screen-settings')">設定</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('progress')" id="tab-progress">進行中</button>
+    <button class="tab-btn" onclick="switchTab('done')" id="tab-done">已通過</button>
+  </div>
+
+  <div class="content">
+    <div id="list-progress"></div>
+    <div id="list-done" style="display:none"></div>
+  </div>
+
+  <button class="fab" onclick="showScreen('screen-new')" title="新增作業">＋</button>
+</div>
+
+<!-- ===== 畫面 2：新增作業 ===== -->
+<div id="screen-new" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="showScreen('screen-list')">← 返回</button>
+    </div>
+    <div class="topbar-title">新增作業</div>
+    <button class="btn btn-sm btn-primary" onclick="saveNewHw()">儲存</button>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">貼上 LINE 收到的作業通知</label>
+        <textarea class="form-input" id="new-linetext" placeholder="《 P22全 速度152》
+速度：152、4拍、雙八分音符
+起拍：1又2又下上開始" style="min-height:120px;"></textarea>
+      </div>
+    </div>
+    <p style="font-size:13px; color:var(--text-muted); padding: 4px 4px 0;">
+      直接把 LINE 的文字貼進來就好，每次上傳都會帶入。
+    </p>
+  </div>
+</div>
+
+<!-- ===== 畫面 3：作業詳細 ===== -->
+<div id="screen-detail" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="showScreen('screen-list')">← 返回</button>
+    </div>
+    <div>
+      <div class="topbar-title" id="detail-title"></div>
+      <div class="topbar-sub" id="detail-sub"></div>
+    </div>
+    <button class="btn btn-sm" style="color:var(--danger); border-color:var(--danger);" onclick="deleteHw()">刪除</button>
+  </div>
+  <div class="content" id="detail-content"></div>
+</div>
+
+<!-- ===== 畫面 4：產生上傳文字 ===== -->
+<div id="screen-generate" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" id="gen-back-btn" onclick="showScreen('screen-detail')">← 返回</button>
+    </div>
+    <div class="topbar-title">上傳文字</div>
+  </div>
+  <div class="content">
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">
+      點「複製」按鈕，或長按下方文字全選後複製，貼到 FB 發文。
+    </p>
+    <textarea id="gen-preview" readonly
+      style="width:100%; font-size:14px; line-height:1.9; padding:14px;
+             background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm);
+             color:var(--text); font-family:inherit; resize:none; min-height:200px;
+             margin-bottom:10px; -webkit-user-select:text; user-select:text;"></textarea>
+    <button class="btn btn-primary btn-full" id="copy-btn" onclick="copyGenText()">複製這段文字</button>
+    <p style="font-size:12px; color:var(--text-hint); text-align:center; margin-top:8px;">
+      複製失敗的話，長按上方文字框 → 全選 → 複製
+    </p>
+    <div style="height: 10px;"></div>
+    <button class="btn btn-full" onclick="showScreen('screen-list')">回到作業列表</button>
+    <div style="height: 12px;"></div>
+    <div class="card" style="background: var(--warning-bg); border-color: #f0d9b5;">
+      <p style="font-size:13px; color:var(--warning); font-weight:500; margin-bottom:4px;">上傳後記得回來</p>
+      <p style="font-size:13px; color:var(--warning);">老師在 FB 回覆後，回到作業詳細頁填入評語。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 畫面 5：填入老師評語 ===== -->
+<div id="screen-feedback" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="showScreen('screen-detail')">← 返回</button>
+    </div>
+    <div class="topbar-title">填入老師評語</div>
+  </div>
+  <div class="content">
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+      把老師在 FB 的留言貼進來。
+    </p>
+    <div class="form-group">
+      <textarea class="form-input" id="feedback-text" placeholder="老師評語..." style="min-height:100px;"></textarea>
+    </div>
+    <div class="btn-row" style="margin-bottom: 10px;">
+      <button class="btn btn-danger" onclick="saveFeedback('revise')">還要修正</button>
+      <button class="btn btn-success" onclick="saveFeedback('pass')">老師說通過！</button>
+    </div>
+    <p style="font-size:12px; color:var(--text-hint); text-align:center;">
+      選「還要修正」後，下次上傳會自動帶入這條評語
+    </p>
+  </div>
+</div>
+
+<!-- ===== 畫面 6：設定 ===== -->
+<div id="screen-settings" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="showScreen('screen-list')">← 返回</button>
+    </div>
+    <div class="topbar-title">設定</div>
+    <button class="btn btn-sm btn-primary" onclick="saveSettings()">儲存</button>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">班級 ＋ 姓名</label>
+        <input class="form-input" id="setting-name" placeholder="513張立築" />
+      </div>
+      <p style="font-size:13px; color:var(--text-muted);">升學期時在這裡改班級號碼就好，例如 613張立築。</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toast 提示 -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// 資料層：從 localStorage 讀寫
+// ============================================================
+const STORAGE_KEY = 'hw-tracker-v1';
+const SETTINGS_KEY = 'hw-tracker-settings';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { name: '513張立築' }; }
+  catch(e) { return { name: '513張立築' }; }
+}
+
+function saveSettings() {
+  const name = document.getElementById('setting-name').value.trim();
+  if (!name) { showToast('請填入姓名'); return; }
+  const settings = { name };
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  document.getElementById('student-name-display').textContent = name;
+  showToast('設定已儲存');
+  showScreen('screen-list');
+}
+
+// ============================================================
+// 日期工具：台北時間民國年
+// ============================================================
+function getTaipeiDate() {
+  // 取得台北時間 UTC+8
+  const now = new Date();
+  const taipei = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  const year = taipei.getFullYear() - 1911; // 民國年
+  const month = taipei.getMonth() + 1;
+  const day = taipei.getDate();
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  const week = weekdays[taipei.getDay()];
+  return {
+    str: `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`,
+    week,
+    full: `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}（${week}）`
+  };
+}
+
+// ============================================================
+// 畫面切換
+// ============================================================
+let currentHwId = null; // 目前開啟的作業 ID
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+
+  // 進入設定頁時帶入現有值
+  if (id === 'screen-settings') {
+    const s = loadSettings();
+    document.getElementById('setting-name').value = s.name;
+  }
+  // 進入列表頁時重新渲染
+  if (id === 'screen-list') {
+    renderList();
+  }
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-progress').classList.toggle('active', tab === 'progress');
+  document.getElementById('tab-done').classList.toggle('active', tab === 'done');
+  document.getElementById('list-progress').style.display = tab === 'progress' ? 'block' : 'none';
+  document.getElementById('list-done').style.display = tab === 'done' ? 'block' : 'none';
+}
+
+// ============================================================
+// 列表渲染
+// ============================================================
+function renderList() {
+  const data = loadData();
+  const progress = data.filter(h => h.status !== 'done');
+  const done = data.filter(h => h.status === 'done');
+
+  // 進行中
+  const progressEl = document.getElementById('list-progress');
+  if (progress.length === 0) {
+    progressEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎵</div>
+        <div class="empty-state-text">還沒有進行中的作業</div>
+        <div class="empty-state-sub">點右下角 ＋ 新增第一個作業</div>
+      </div>`;
+  } else {
+    progressEl.innerHTML = progress.map(hw => renderHwCard(hw)).join('');
+  }
+
+  // 已通過
+  const doneEl = document.getElementById('list-done');
+  if (done.length === 0) {
+    doneEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">✓</div>
+        <div class="empty-state-text">還沒有通過的作業</div>
+        <div class="empty-state-sub">繼續加油！</div>
+      </div>`;
+  } else {
+    doneEl.innerHTML = done.map(hw => renderHwCard(hw)).join('');
+  }
+}
+
+function renderHwCard(hw) {
+  const isDone = hw.status === 'done';
+  const isWaiting = hw.status === 'waiting'; // 等老師評語
+  const uploadCount = hw.uploads ? hw.uploads.length : 0;
+
+  // 最新一筆老師評語
+  const lastFeedback = hw.uploads && hw.uploads.length > 0
+    ? hw.uploads[hw.uploads.length - 1].teacher
+    : null;
+
+  let badgeHtml = '';
+  if (isDone) badgeHtml = '<span class="badge badge-done">通過 ✓</span>';
+  else if (isWaiting) badgeHtml = '<span class="badge badge-waiting">等老師評語</span>';
+  else badgeHtml = '<span class="badge badge-progress">進行中</span>';
+
+  let feedbackHtml = '';
+  if (!isDone && lastFeedback) {
+    feedbackHtml = `
+      <div class="feedback-preview-label">老師上次評語</div>
+      <div class="feedback-preview">${escHtml(lastFeedback)}</div>`;
+  }
+
+  let actionBtn = '';
+  if (!isDone) {
+    if (isWaiting) {
+      actionBtn = `<button class="btn btn-sm" onclick="event.stopPropagation(); openFeedback('${hw.id}')">填入老師評語</button>`;
+    } else {
+      actionBtn = `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); openGenerate('${hw.id}')">產生上傳文字</button>`;
+    }
+  }
+
+  const cardClass = isDone ? 'card hw-card done-card' : 'card hw-card';
+
+  return `
+    <div class="${cardClass}" onclick="openDetail('${hw.id}')">
+      <div class="hw-header">
+        <div class="hw-name">${escHtml(hw.song)}</div>
+        ${badgeHtml}
+      </div>
+      <div class="hw-meta">${hw.lineText ? escHtml(hw.lineText.split('\n').slice(0,2).join(' ')) : `速度 ${escHtml(hw.bpm||'')} · ${escHtml(hw.beat||'')} · ${escHtml(hw.note||'')}`}</div>
+      ${feedbackHtml}
+      <div class="hw-status-bar">
+        <span class="hw-status-text">已上傳 ${uploadCount} 次</span>
+        ${actionBtn}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// 新增作業
+// ============================================================
+function saveNewHw() {
+  const lineText = document.getElementById('new-linetext').value.trim();
+
+  if (!lineText) { showToast('請貼上 LINE 的作業通知文字'); return; }
+
+  // 從 LINE 文字中抓曲名當作顯示標題（取《》內容，或第一行）
+  const songMatch = lineText.match(/《([^》]+)》/);
+  const displayName = songMatch ? songMatch[1] : lineText.split('\n')[0].trim();
+
+  const hw = {
+    id: 'hw_' + Date.now(),
+    song: displayName,
+    lineText,
+    status: 'new',
+    uploads: [],
+    createdAt: new Date().toISOString()
+  };
+
+  const data = loadData();
+  data.unshift(hw);
+  saveData(data);
+
+  document.getElementById('new-linetext').value = '';
+
+  showToast('作業已新增！');
+  showScreen('screen-list');
+}
+
+// ============================================================
+// 作業詳細頁
+// ============================================================
+function openDetail(id) {
+  currentHwId = id;
+  const data = loadData();
+  const hw = data.find(h => h.id === id);
+  if (!hw) return;
+
+  document.getElementById('detail-title').textContent = hw.song;
+  document.getElementById('detail-sub').textContent = hw.lineText
+    ? hw.lineText.split('\n').filter(l => l.trim()).slice(1,2).join('')
+    : `速度 ${hw.bpm} · ${hw.beat} · ${hw.note}`;
+
+  // 組裝詳細內容
+  const content = document.getElementById('detail-content');
+  const uploadCount = hw.uploads ? hw.uploads.length : 0;
+  const isDone = hw.status === 'done';
+  const isWaiting = hw.status === 'waiting';
+
+  let actionSection = '';
+  if (isDone) {
+    actionSection = `
+      <div class="card" style="background:var(--success-bg); border-color:#a8d5b8; text-align:center; padding:20px;">
+        <div style="font-size:28px; margin-bottom:8px;">🎉</div>
+        <div style="font-size:16px; font-weight:600; color:var(--success);">作業已通過！</div>
+        <div style="font-size:13px; color:var(--success); margin-top:4px;">共上傳 ${uploadCount} 次</div>
+      </div>`;
+  } else if (isWaiting) {
+    actionSection = `
+      <div class="card" style="background:var(--warning-bg); border-color:#f0d9b5;">
+        <p style="font-size:14px; color:var(--warning); font-weight:500; margin-bottom:12px;">等老師在 FB 回覆...</p>
+        <button class="btn btn-full" style="background:var(--warning-bg); color:var(--warning); border-color:var(--warning);" onclick="openFeedback('${hw.id}')">老師回覆了，填入評語</button>
+      </div>`;
+  } else {
+    const nextUpload = uploadCount + 1;
+    actionSection = `
+      <div class="card">
+        <p style="font-size:14px; font-weight:500; margin-bottom:12px;">準備第 ${nextUpload} 次上傳</p>
+        <button class="btn btn-primary btn-full" onclick="openGenerate('${hw.id}')">產生上傳文字</button>
+      </div>`;
+  }
+
+  // 歷史記錄
+  let historyHtml = '';
+  if (uploadCount > 0) {
+    const items = [...hw.uploads].reverse().map((u, i) => {
+      const realIndex = uploadCount - i;
+      return `
+        <div class="history-item">
+          <div class="history-date">第 ${realIndex} 次上傳・${u.date}</div>
+          <div class="history-content" style="white-space:pre-wrap; font-size:13px; color:var(--text-muted);">${escHtml(u.text)}</div>
+          ${u.teacher ? `
+            <div class="history-teacher">
+              <div class="history-teacher-label">老師評語</div>
+              ${escHtml(u.teacher)}
+            </div>` : '<div style="font-size:12px;color:var(--text-hint);margin-top:6px;">等待老師評語中...</div>'}
+        </div>`;
+    }).join('');
+
+    historyHtml = `
+      <div class="section-title">上傳歷史</div>
+      <div class="card">${items}</div>`;
+  }
+
+  content.innerHTML = actionSection + historyHtml;
+  showScreen('screen-detail');
+}
+
+function deleteHw() {
+  if (!currentHwId) return;
+  if (!confirm('確定刪除這個作業？')) return;
+  const data = loadData().filter(h => h.id !== currentHwId);
+  saveData(data);
+  showToast('已刪除');
+  showScreen('screen-list');
+}
+
+// ============================================================
+// 產生上傳文字
+// ============================================================
+function openGenerate(id) {
+  currentHwId = id;
+  const data = loadData();
+  const hw = data.find(h => h.id === id);
+  if (!hw) return;
+
+  const settings = loadSettings();
+  const dateInfo = getTaipeiDate();
+
+  // 組裝修正清單（從每次上傳的老師評語累積）
+  const revisions = (hw.uploads || [])
+    .map(u => u.teacher)
+    .filter(t => t && t.trim());
+
+  // 組裝文字：日期姓名 + LINE 原文 + 修正清單 + 結尾
+  let lines = [];
+  lines.push(`${dateInfo.str}（${dateInfo.week}）${settings.name}`);
+  lines.push(hw.lineText);
+
+  // 加入所有修正
+  revisions.forEach((r, i) => {
+    lines.push(`修正${numToChinese(i+1)}：${r}`);
+  });
+
+  lines.push('敬請老師指導，謝謝老師！');
+
+  const text = lines.join('\n');
+
+  document.getElementById('gen-preview').value = text;
+  document.getElementById('copy-btn').textContent = '複製這段文字';
+  document.getElementById('copy-btn').classList.remove('btn-copied');
+
+  // 儲存這次產生的文字到 upload 記錄（先建立，等等填評語）
+  // 只在「新上傳」狀態下新建記錄
+  if (hw.status !== 'waiting') {
+    hw.uploads = hw.uploads || [];
+    hw.uploads.push({
+      id: 'up_' + Date.now(),
+      date: dateInfo.full,
+      text: text,
+      teacher: ''
+    });
+    hw.status = 'waiting';
+    const idx = data.findIndex(h => h.id === id);
+    data[idx] = hw;
+    saveData(data);
+  }
+
+  showScreen('screen-generate');
+}
+
+function copyGenText() {
+  const el = document.getElementById('gen-preview');
+  const text = el.value;
+  const btn = document.getElementById('copy-btn');
+
+  // 先選取 textarea 內容（所有手機都支援）
+  el.focus();
+  el.select();
+
+  // 再試 clipboard API（HTTPS 或桌機才會成功）
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '已複製！去貼到 FB 吧';
+      btn.classList.add('btn-copied');
+      setTimeout(() => {
+        btn.textContent = '複製這段文字';
+        btn.classList.remove('btn-copied');
+      }, 3000);
+    }).catch(() => {
+      // API 失敗，文字已選取，提示長按
+      showToast('請長按文字框 → 複製');
+    });
+  } else {
+    // 不支援 API，文字已選取
+    showToast('請長按文字框 → 複製');
+  }
+}
+
+// ============================================================
+// 填入老師評語
+// ============================================================
+function openFeedback(id) {
+  currentHwId = id;
+  document.getElementById('feedback-text').value = '';
+  showScreen('screen-feedback');
+}
+
+function saveFeedback(action) {
+  const text = document.getElementById('feedback-text').value.trim();
+  if (!text) { showToast('請填入老師評語'); return; }
+
+  const data = loadData();
+  const hw = data.find(h => h.id === currentHwId);
+  if (!hw) return;
+
+  // 找最後一筆 upload（就是這次等待評語的那筆）
+  const lastUpload = hw.uploads[hw.uploads.length - 1];
+  if (lastUpload) lastUpload.teacher = text;
+
+  if (action === 'pass') {
+    hw.status = 'done';
+    const idx = data.findIndex(h => h.id === currentHwId);
+    data[idx] = hw;
+    saveData(data);
+    showPassScreen(hw);
+  } else {
+    // 還要修正 → 回到 new 狀態，下次產生文字時會帶入這條
+    hw.status = 'new';
+    const idx = data.findIndex(h => h.id === currentHwId);
+    data[idx] = hw;
+    saveData(data);
+    showToast('已記錄！下次上傳會自動帶入修正內容');
+    showScreen('screen-detail');
+    openDetail(currentHwId);
+  }
+}
+
+// ============================================================
+// 通過畫面（內嵌在 detail 裡）
+// ============================================================
+function showPassScreen(hw) {
+  // 用 detail 畫面顯示慶祝
+  document.getElementById('detail-title').textContent = hw.song;
+  document.getElementById('detail-sub').textContent = '作業完成！';
+
+  const content = document.getElementById('detail-content');
+  content.innerHTML = `
+    <div class="pass-screen">
+      <span class="pass-icon">🎉</span>
+      <div class="pass-title">通過了！</div>
+      <div class="pass-sub">${escHtml(hw.song)} 已結案</div>
+    </div>
+    <div class="card" style="background:var(--success-bg); border-color:#a8d5b8;">
+      <div style="font-size:12px; color:var(--success); margin-bottom:4px;">老師最終評語</div>
+      <div style="font-size:14px; color:var(--success);">${escHtml(hw.uploads[hw.uploads.length-1].teacher)}</div>
+    </div>
+    <button class="btn btn-full" onclick="showScreen('screen-list')" style="margin-top:12px;">回到作業列表</button>
+  `;
+  showScreen('screen-detail');
+}
+
+// ============================================================
+// 工具函式
+// ============================================================
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function numToChinese(n) {
+  const map = ['一','二','三','四','五','六','七','八','九','十'];
+  return map[n-1] || n;
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+function init() {
+  const settings = loadSettings();
+  document.getElementById('student-name-display').textContent = settings.name;
+  renderList();
+}
+
+init();
+</script>
+</body>
+</html>
